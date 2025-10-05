@@ -2,6 +2,7 @@
 
 from mistralai import Mistral
 
-def add_rag_capabilities(client:Mistral)->Mistral:
+
+def add_rag_capabilities(client: Mistral) -> Mistral:
     """Add rag capabilities."""
     return client

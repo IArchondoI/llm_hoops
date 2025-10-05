@@ -7,32 +7,38 @@ from typing import TypedDict, Union, List, Dict, Optional, Sequence, Mapping, An
 import json
 from dataclasses import dataclass
 
+
 @dataclass
 class Output:
     """Hold LLM output."""
+
     response: str
     message_history: List[Dict[str, Union[str, None]]]
+
 
 class Parameters(TypedDict):
     type: str
     properties: Mapping[str, str]
     required: Sequence[str]
 
+
 class Function(TypedDict):
     name: str
     description: str
     parameters: Parameters
 
-def start_mistral_client()->Mistral:
+
+def start_mistral_client() -> Mistral:
     """Start Mistral Model."""
     return Mistral(api_key=MISTRAL_API_KEY)
 
+
 def execute_function_calling_prompt(
     client: Mistral,
-    message_history:Any,
+    message_history: Any,
     function_calling: FunctionCallObjects,
     model: str = "mistral-large-latest",
-    max_iterations: int = 5
+    max_iterations: int = 5,
 ) -> Output:
     """Execute prompt with possible multi-step function calling."""
     # Initial call
@@ -41,7 +47,7 @@ def execute_function_calling_prompt(
         messages=message_history,
         tools=function_calling.tools,
         tool_choice="any" if function_calling else None,
-        parallel_tool_calls=False
+        parallel_tool_calls=False,
     )
 
     iteration = 0
@@ -64,7 +70,9 @@ def execute_function_calling_prompt(
                 try:
                     function_args = json.loads(tool_call.function.arguments)
                 except json.JSONDecodeError:
-                    print(f"Invalid JSON for {function_name}: {tool_call.function.arguments}")
+                    print(
+                        f"Invalid JSON for {function_name}: {tool_call.function.arguments}"
+                    )
                     continue
 
             func = function_calling.names_to_functions.get(function_name)
@@ -76,12 +84,14 @@ def execute_function_calling_prompt(
             result = func(**function_args) if function_args else func()
 
             # Append tool result
-            message_history.append({
-                "role": "tool",
-                "tool_call_id": tool_call.id,
-                "name": function_name,
-                "content": str(result),
-            })
+            message_history.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "name": function_name,
+                    "content": str(result),
+                }
+            )
 
         # Send the new message history back to the model
         response = client.chat.complete(
@@ -89,7 +99,7 @@ def execute_function_calling_prompt(
             messages=message_history,
             tools=function_calling.tools,
             tool_choice="auto",
-            parallel_tool_calls=False
+            parallel_tool_calls=False,
         )
 
     # When model stops calling tools, take the final message as the answer
@@ -99,22 +109,22 @@ def execute_function_calling_prompt(
     return Output(response=final_answer, message_history=message_history)
 
 
-
-def execute_prompt(client: Mistral, prompt: str, model: str = "mistral-large-latest", function_calling: Optional[FunctionCallObjects] = None) -> Output:
+def execute_prompt(
+    client: Mistral,
+    prompt: str,
+    model: str = "mistral-large-latest",
+    function_calling: Optional[FunctionCallObjects] = None,
+) -> Output:
     """Execute prompt."""
     message_history: Any = [
-        {
-            "role": "user",
-            "content": prompt
-        },
+        {"role": "user", "content": prompt},
     ]
 
     if not function_calling:
-        response = client.chat.complete(
-            model=model,
-            messages=message_history
-        )
+        response = client.chat.complete(model=model, messages=message_history)
         return Output(response=str(response), message_history=message_history)
     else:
 
-        return execute_function_calling_prompt(client,message_history,function_calling, model)
+        return execute_function_calling_prompt(
+            client, message_history, function_calling, model
+        )
