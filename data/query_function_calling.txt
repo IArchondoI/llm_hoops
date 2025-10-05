@@ -1,0 +1,5 @@
+Give me all centers (C) from Los Angeles Lakers (LAL), together with their FPPM.
+
+Reply only with a list of tuples in the format:
+
+(Name, FPPM)

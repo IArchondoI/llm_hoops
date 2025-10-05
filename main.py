@@ -3,7 +3,7 @@ from llm_hoops.utils import load_data, load_query
 from pathlib import Path
 from llm_hoops.model.model import start_mistral_client, execute_prompt
 from llm_hoops.rag.rag import add_rag_capabilities
-from llm_hoops.function_calling.function_calling import add_function_calling
+from llm_hoops.function_calling.function_calling import setup_function_calling
 
 USE_RAG = False
 USE_FUNCTIONS = False
@@ -19,7 +19,7 @@ def main():
     if USE_RAG:
         client = add_rag_capabilities(client)
     if USE_FUNCTIONS:
-        client = add_function_calling(client)
+        client = setup_function_calling(client)
 
     return execute_prompt(client,query)
 
