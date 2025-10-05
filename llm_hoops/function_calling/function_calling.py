@@ -30,46 +30,112 @@ def get_players_ordered_by_fppm(
     return list(sorted_df[["Player", "FPPM"]].itertuples(index=False, name=None))
 
 
+def get_players_from_a_given_team(df: pd.DataFrame, team: str) -> list[str]:
+    """Get players from a given team."""
+    if team not in list(df["Team"].unique()):
+        raise ValueError("Team not in database")
+    return list(df[df["Team"] == team]["Player"].unique())
+
+
+def get_fppm_from_a_list_of_players(
+    df: pd.DataFrame, list_of_players: list[str]
+) -> list[tuple[str, float]]:
+    """Get fppm from a list of players."""
+    return list(df[df["Player"].isin(list_of_players)].sort_values("FPPM",ascending=False)[["Player", "FPPM"]].itertuples(
+        index=False, name=None
+    ))
+
+
 def setup_function_calling(df: pd.DataFrame) -> FunctionCallObjects:
     """Add function calling capabilities to an LLM."""
+
+    # tools: Any = [
+    #     {
+    #         "type": "function",
+    #         "function": {
+    #             "name": "get_players_ordered_by_fppm",
+    #             "description": (
+    #                 "Get NBA players ordered by fantasy points per minute (FPPM) from best to worst, "
+    #                 "together with their FPPM in a tuple."
+    #             ),
+    #             "parameters": {
+    #                 "type": "object",
+    #                 "properties": {
+    #                     "player_position": {
+    #                         "type": "string",
+    #                         "description": (
+    #                             "Optional player position filter. "
+    #                             "One of 'G', 'F', 'C' or 'ALL'. ALL includes all players."
+    #                         ),
+    #                     },
+    #                     "team": {
+    #                         "type": ["string", "null"],
+    #                         "description": (
+    #                             "Optional team position filter. Input is the three letter abbreviation for each team in string format. "
+    #                             "If not specified, the function returns players from all teams."
+    #                         ),
+    #                     },
+    #                 },
+    #                 "required": ["player_position"],
+    #             },
+    #         },
+    #     }
+    # ]
+
+    # names_to_functions = {
+    #     "get_players_ordered_by_fppm": functools.partial(
+    #         get_players_ordered_by_fppm, df=df
+    #     )
+    # }
 
     tools: Any = [
         {
             "type": "function",
             "function": {
-                "name": "get_players_ordered_by_fppm",
-                "description": (
-                    "Get NBA players ordered by fantasy points per minute (FPPM) from best to worst, "
-                    "together with their FPPM in a tuple."
-                ),
+                "name": "get_players_from_a_given_team",
+                "description": "Get a list of players belonging to a specific team.",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "player_position": {
+                        "team": {
                             "type": "string",
                             "description": (
-                                "Optional player position filter. "
-                                "One of 'G', 'F', 'C' or 'ALL'. ALL includes all players."
+                                "Name of the team to retrieve players from. Must exist in the DataFrame."
+                                "Team name must be specified as a three letter string for the team abbreviation."
                             ),
-                        },
-                        "team": {
-                            "type": ["string", "null"],
-                            "description": (
-                                "Optional team position filter. Input is the three letter abbreviation for each team in string format. "
-                                "If not specified, the function returns players from all teams."
-                            ),
-                        },
+                        }
                     },
-                    "required": ["player_position"],
+                    "required": ["team"],
                 },
             },
-        }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_fppm_from_a_list_of_players",
+                "description": "Get the fantasy points per minute (FPPM) for a list of players.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "list_of_players": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "List of player names to retrieve FPPM values for.",
+                        }
+                    },
+                    "required": ["list_of_players"],
+                },
+            },
+        },
     ]
 
     names_to_functions = {
-        "get_players_ordered_by_fppm": functools.partial(
-            get_players_ordered_by_fppm, df=df
-        )
+        "get_players_from_a_given_team": functools.partial(
+            get_players_from_a_given_team, df=df
+        ),
+        "get_fppm_from_a_list_of_players": functools.partial(
+            get_fppm_from_a_list_of_players, df=df
+        ),
     }
 
     return FunctionCallObjects(tools=tools, names_to_functions=names_to_functions)

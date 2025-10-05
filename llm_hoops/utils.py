@@ -2,7 +2,6 @@
 
 import pandas as pd
 from pathlib import Path
-from typing import Union
 
 
 def load_data(data_path: Path) -> pd.DataFrame:
@@ -10,7 +9,7 @@ def load_data(data_path: Path) -> pd.DataFrame:
     return pd.read_csv(data_path)
 
 
-def load_query(file_path: Union[str, Path]) -> str:
+def load_query(file_path):
     """Load a query from a text file."""
     try:
         with open(file_path, "r", encoding="utf-8") as file:
