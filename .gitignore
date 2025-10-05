@@ -1,0 +1,17 @@
+# Ignore Python bytecode files
+*.pyc
+*.pyo
+__pycache__/
+
+# Ignore virtual environment directories
+.venv/
+
+# Ignore Poetry lock file
+poetry.lock
+
+# Ignore local configuration files
+*.env
+
+# Ignore specific files
+do_not_commit.py
+llm_hoops/model/mistral_credentials.py

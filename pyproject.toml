@@ -1,0 +1,23 @@
+[project]
+name = "llm-hoops"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Ignacio Archondo",email = "i.archondo@outlook.com"}
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pandas (>=2.3.3,<3.0.0)",
+    "mistralai (>=1.9.11,<2.0.0)",
+    "ipykernel (>=6.30.1,<7.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.poetry]
+packages = [{ include = "llm_hoops" }]
