@@ -1,0 +1,5 @@
+Who is the all time leading scorer for the San Antonio Spurs?
+
+Answer with only the name and last name under a json with the following format:
+
+{{"Last name":"xx", "First name":"xxx"}}
