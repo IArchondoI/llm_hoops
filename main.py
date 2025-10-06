@@ -14,17 +14,17 @@ MODEL = "mistral-small-latest"
 
 def main():
     """Main function to execute the program."""
-    query = load_text(Path("data/query.txt"))
+    prompt = load_text(Path("data/query.txt"))
 
     df = load_data(Path("data/nba.csv"))
 
     client = start_mistral_client()
-    if USE_RAG:
-        client = add_rag_capabilities(client)
+    
+    rag = add_rag_capabilities(client,prompt) if USE_RAG else None
 
     function_call_objects = setup_function_calling(df) if USE_FUNCTIONS else None
 
-    return execute_prompt(client,query,MODEL,function_call_objects)
+    return execute_prompt(client,prompt,model=MODEL,rag=rag,function_calling=function_call_objects)
 
 if __name__ == "__main__":
     main()

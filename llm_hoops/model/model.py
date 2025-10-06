@@ -32,8 +32,40 @@ def start_mistral_client() -> Mistral:
     """Start Mistral Model."""
     return Mistral(api_key=MISTRAL_API_KEY)
 
+def evaluate_prompt_using_rag(
+    client:Mistral,
+    relevant_chunks:list[str],
+    question:str,
+    model: str = "mistral-large-latest"
+)->Output:
+    """Evaluate prompt using a RAG."""
+    prompt = f"""
+        Context information is below.
+        ---------------------
+        {relevant_chunks}
+        ---------------------
+        Given the context information and not prior knowledge, answer the query.
+        Query: {question}
+        Answer:
+        """
+    
+    message_history:Any = [
+        {
+            "role": "user", "content": prompt
+        }
+    ]
+    chat_response = client.chat.complete(
+        model=model,
+        messages=message_history
+    )
+    final_answer = str(chat_response.choices[0].message.content)
+    message_history.append({"role": "assistant", "content": final_answer})
 
-def execute_function_calling_prompt(
+
+    return Output(response=final_answer,message_history=message_history)
+
+
+def evaluate_prompt_calling_function(
     client: Mistral,
     message_history: Any,
     function_calling: FunctionCallObjects,
@@ -68,7 +100,7 @@ def execute_function_calling_prompt(
 
             if tool_call.function.arguments:
                 try:
-                    function_args = json.loads(tool_call.function.arguments)
+                    function_args = json.loads(tool_call.function.arguments) #type: ignore
                 except json.JSONDecodeError:
                     print(
                         f"Invalid JSON for {function_name}: {tool_call.function.arguments}"
@@ -113,18 +145,21 @@ def execute_prompt(
     client: Mistral,
     prompt: str,
     model: str = "mistral-large-latest",
+    rag: list[str] | None = None,
     function_calling: Optional[FunctionCallObjects] = None,
 ) -> Output:
     """Execute prompt."""
     message_history: Any = [
         {"role": "user", "content": prompt},
     ]
-
-    if not function_calling:
-        response = client.chat.complete(model=model, messages=message_history)
-        return Output(response=str(response), message_history=message_history)
-    else:
-
-        return execute_function_calling_prompt(
+    if function_calling:
+        return evaluate_prompt_calling_function(
             client, message_history, function_calling, model
         )
+    elif rag:
+        return evaluate_prompt_using_rag(client,rag,prompt,model)
+
+    response = client.chat.complete(model=model, messages=message_history)
+    return Output(response=str(response), message_history=message_history)
+
+        
