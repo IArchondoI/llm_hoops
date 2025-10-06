@@ -15,3 +15,5 @@ poetry.lock
 # Ignore specific files
 do_not_commit.py
 llm_hoops/model/mistral_credentials.py
+data/emails/*
+data/.DS_Store
